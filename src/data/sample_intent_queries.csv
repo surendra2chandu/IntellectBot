@@ -1,0 +1,11 @@
+Query,Intent
+Hi there!,Greet
+"Hello, how are you?",Greet
+Can you tell me the status of my ticket?,Status
+Good morning!,Greet
+What's the update on my support request?,Status
+Hey!,Greet
+Is my issue resolved yet?,Status
+Hi!,Greet
+Any update on my complaint?,Status
+How's it going?,Greet
