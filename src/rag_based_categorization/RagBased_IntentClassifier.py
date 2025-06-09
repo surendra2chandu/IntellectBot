@@ -3,12 +3,16 @@ from fastapi import HTTPException
 from src.utilities.OllamaPipeline import OllamaPipeline
 from src.conf.Configurations import DEFAULT_LLAMA_MODEL , logger
 from typing import Optional
-from src.conf.Prompts import prompt
+from src.conf.Prompts import prompt1
+from src.utilities.IntentDatabaseUtility import IntentDatabaseUtility
+from src.data.EmbeddingsGenerator import EmbeddingsGenerator
 
-class IntentClassifier:
+
+class RagBasedIntentClassifier:
     def __init__(self, llama_model: Optional[str] = DEFAULT_LLAMA_MODEL):
         """
-        Initialize the IntentClassifier with the specified Ollama model.
+        Initialize the RagBasedIntentClassifier with the specified Ollama model.
+        This class is designed to classify intents based on RAG (Retrieval-Augmented Generation) techniques.
         :param llama_model: The model to be used for intent classification. Defaults to DEFAULT_LLAMA_MODEL.
         """
 
@@ -35,11 +39,24 @@ class IntentClassifier:
             str: The predicted intent.
         """
 
+        # Generate the embedding for the query
+        self.logger.info("Generating embedding for the query...")
+        embedding = EmbeddingsGenerator().get_embeddings([query])[0]
+
+        # Get relevant intents from the database
+        try:
+            self.logger.info("Retrieving relevant intents from the database...")
+            intents = IntentDatabaseUtility().get_relevant_intents(embedding)
+            self.logger.info(f"Retrieved {len(intents)} relevant intents from the database.")
+        except Exception as e:
+            self.logger.error(f"Error retrieving intents from the database: {e}")
+            raise HTTPException(status_code=500, detail="Error retrieving intents from the database")
+
         # Invoke the model with the chat structure
         try:
             # Directly invoke the model with the formatted prompt
             self.logger.info("invoking the model with input message")
-            response = self.llm.invoke(input=prompt.format(query=query))
+            response = self.llm.invoke(input=prompt1.format(query=query))
             self.logger.info("response received from the model")
             self.logger.info(f"response: {response}")
 
@@ -49,24 +66,10 @@ class IntentClassifier:
 
 if __name__ == "__main__":
     # Example usage of the IntentClassifier
-    sample_query = "Hello , good morning "
-
-    classifier = IntentClassifier()
-    # intent = classifier.classify(sample_query)
-    # print(sample_query)
-    # print(f"Predicted intent: {intent}")
-    #
-    # sample_query = "What is  the status of my order?"
-    # intent = classifier.classify(sample_query)
-    # print(sample_query)
-    # print(f"Predicted intent: {intent}")
-    #
-    # sample_query = "Who was surgeon general in 2019?"
-    # intent = classifier.classify(sample_query)
-    # print(sample_query)
-    # print(f"Predicted intent: {intent}")
-
+    classifier = RagBasedIntentClassifier()
     sample_query = "Hi how are you?"
+
     intent = classifier.classify(sample_query)
     print(sample_query)
+
     print(f"Predicted intent: {intent}")

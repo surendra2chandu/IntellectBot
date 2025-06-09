@@ -1,5 +1,17 @@
 # Define the default prompt for the Llama model
-prompt = """
+prompt1 = """Classify the user's intent into one of the following categories and output only the intent name as a single word — no explanations, no labels:
+
+1. Greet - For greetings like "hi", "hello", "how are you" etc.  
+2. Status - For questions about the current status of a ticket.  
+3. UnKnown - For anything else that does not fall under the above categories.
+
+User Query: {query}
+
+Only respond with one of: Greet, Status, UnKnown"""
+
+
+
+prompt2 = """
 if the user query has multiple questions, split the input query into multiple questions.
 
 Understand the gist of the each input question and classify the user's intent into one of the following categories:
