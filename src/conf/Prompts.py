@@ -27,4 +27,24 @@ User Query: {query}
 Intent:"""
 
 
+RAG_PROMPT1 = """
+step1:
+Rephrase the question: include only the core ask and output the ask in a clear and appropriate 'how to' or 'what is' or 'why is' question. ONLY output the rephrased question.
+Question: {query}
 
+step2:
+Label above rephrased question from a conversation with an intent. Reply ONLY with the name of the intent.
+
+The intent should be one of the following:
+- greet
+- status
+- unknown
+
+Message: {query1}    # Got from vector database
+Intent:  {intent1}   # Got from vector database
+Message: {query2}    # Got from vector database
+Intent:  {intent2}   # Got from vector database
+
+Intent:
+
+"""
