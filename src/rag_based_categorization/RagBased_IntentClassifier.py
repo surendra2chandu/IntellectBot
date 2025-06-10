@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from src.utilities.OllamaPipeline import OllamaPipeline
 from src.conf.Configurations import DEFAULT_LLAMA_MODEL , logger
 from typing import Optional
-from src.conf.Prompts import prompt1
+from src.conf.Prompts import RAG_PROMPT1
 from src.utilities.IntentDatabaseUtility import IntentDatabaseUtility
 from src.data.EmbeddingsGenerator import EmbeddingsGenerator
 
@@ -46,19 +46,33 @@ class RagBasedIntentClassifier:
         # Get relevant intents from the database
         try:
             self.logger.info("Retrieving relevant intents from the database...")
-            intents = IntentDatabaseUtility().get_relevant_intents(embedding)
-            self.logger.info(f"Retrieved {len(intents)} relevant intents from the database.")
+            intent_res = IntentDatabaseUtility().get_relevant_intents(embedding)
+            self.logger.info(f"Retrieved {len(intent_res)} relevant intents from the database.")
         except Exception as e:
             self.logger.error(f"Error retrieving intents from the database: {e}")
             raise HTTPException(status_code=500, detail="Error retrieving intents from the database")
 
+        if len(intent_res) < 2:
+            self.logger.info("Insufficient intents found in the database for classification.")
+            return "No sufficient intents found"
+
         # Invoke the model with the chat structure
         try:
+
+            query1 = intent_res[0][0]
+            intent1 = intent_res[0][1]
+            query2 = intent_res[1][0]
+            intent2 = intent_res[1][1]
+
+            prompt = RAG_PROMPT1.format(query1=query1,intent1=intent1, query2=query2, intent2=intent2, query=query)
+
+            print(prompt)
+            print("--------------------------------------------------")
+
             # Directly invoke the model with the formatted prompt
             self.logger.info("invoking the model with input message")
-            response = self.llm.invoke(input=prompt1.format(query=query))
+            response = self.llm.invoke(input=prompt)
             self.logger.info("response received from the model")
-            self.logger.info(f"response: {response}")
 
             return response
         except Exception as e:
@@ -67,7 +81,8 @@ class RagBasedIntentClassifier:
 if __name__ == "__main__":
     # Example usage of the IntentClassifier
     classifier = RagBasedIntentClassifier()
-    sample_query = "Hi how are you?"
+    # sample_query = "Hi how are you?"
+    sample_query = "hi, buddy?"
 
     intent = classifier.classify(sample_query)
     print(sample_query)
